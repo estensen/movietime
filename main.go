@@ -7,10 +7,23 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/kelseyhightower/envconfig"
 	"github.com/urfave/cli/v2"
 )
 
+type Keys struct {
+	Omdb string
+}
+
 func main() {
+	var keys Keys
+	err := envconfig.Process("movietime", &keys)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	fmt.Println(keys.Omdb)
+
 	app := &cli.App{
 		Name: "reviews",
 		Usage: "get aggregated reviews of a movie",
@@ -21,15 +34,14 @@ func main() {
 		},
 	}
 
-	err := app.Run(os.Args)
+	err = app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	os.Exit(1)
-
-
-	resp, err := http.Get("https://nrk.no")
+	url := fmt.Sprintf("http://www.omdbapi.com/?t=batman+begins&plot=full&apikey=%s&", keys.Omdb)
+	fmt.Println(url)
+	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
 	}
