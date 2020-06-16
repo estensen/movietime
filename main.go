@@ -10,6 +10,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"cloud.google.com/go/translate"
 	"github.com/kelseyhightower/envconfig"
@@ -21,10 +23,16 @@ type Keys struct {
 	Translate string
 }
 
+type Rating struct {
+	Source string
+	Value string
+}
+
 type Movie struct {
 	Title string
 	Year string
 	Plot string
+	Ratings []Rating
 }
 
 var keys Keys
@@ -79,11 +87,25 @@ func getMovie(searchTitle, lang string) {
 		log.Fatal(err)
 	}
 
+	fmt.Println(movie.Title)
+
+	printScore(movie)
+
 	translatedPlot, err := translateText(lang, movie.Plot)
 	if err != nil {
 		log.Fatal(err)
 	}
 	println(translatedPlot)
+}
+
+func printScore(movie Movie) {
+	for r := range movie.Ratings {
+		if movie.Ratings[r].Source == "Rotten Tomatoes" {
+			score, _ := strconv.Atoi(strings.Trim(movie.Ratings[r].Value, "%"))
+			stars := strings.Repeat("⭐️", score/10)
+			fmt.Println(stars)
+		}
+	}
 }
 
 func translateText(targetLanguage, text string) (string, error) {
