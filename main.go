@@ -1,19 +1,24 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/text/language"
+	"google.golang.org/api/option"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 
+	"cloud.google.com/go/translate"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/urfave/cli/v2"
 )
 
 type Keys struct {
 	Omdb string
+	Translate string
 }
 
 type Movie struct {
@@ -47,8 +52,8 @@ func main() {
 }
 
 func getMovie(searchTitle string) {
+
 	url := fmt.Sprintf("http://www.omdbapi.com/?t=%s&plot=full&apikey=%s&", searchTitle, keys.Omdb)
-	fmt.Println(url)
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
@@ -59,6 +64,8 @@ func getMovie(searchTitle string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Debugging
 	log.Println(string(body))
 
 	movie := Movie{}
@@ -66,5 +73,34 @@ func getMovie(searchTitle string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(movie.Title)
+
+	translatedPlot, err := translateText("no", movie.Plot)
+	if err != nil {
+		log.Fatal(err)
+	}
+	println(translatedPlot)
+}
+
+func translateText(targetLanguage, text string) (string, error) {
+	ctx := context.Background()
+
+	lang, err := language.Parse(targetLanguage)
+	if err != nil {
+		return "", fmt.Errorf("language.Parse: %v", err)
+	}
+
+	client, err := translate.NewClient(ctx, option.WithAPIKey(keys.Translate))
+	if err != nil {
+		return "", err
+	}
+	defer client.Close()
+
+	resp, err := client.Translate(ctx, []string{text}, lang, nil)
+	if err != nil {
+		return "", fmt.Errorf("Translate: %v", err)
+	}
+	if len(resp) == 0 {
+		return "", fmt.Errorf("Translate returned empty response to text: %s", text)
+	}
+	return resp[0].Text, nil
 }
