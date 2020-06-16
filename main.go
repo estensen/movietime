@@ -19,19 +19,19 @@ import (
 )
 
 type Keys struct {
-	Omdb string
+	Omdb      string
 	Translate string
 }
 
 type Rating struct {
 	Source string
-	Value string
+	Value  string
 }
 
 type Movie struct {
-	Title string
-	Year string
-	Plot string
+	Title   string
+	Year    string
+	Plot    string
 	Ratings []Rating
 }
 
@@ -47,13 +47,13 @@ func main() {
 	app := &cli.App{
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name: "lang",
-				Value: "en",
-				Usage: "Language to translate plot text to",
+				Name:        "lang",
+				Value:       "en",
+				Usage:       "Language to translate plot text to",
 				Destination: &lang,
 			},
 		},
-		Name: "reviews",
+		Name:  "reviews",
 		Usage: "get aggregated reviews of a movie",
 		Action: func(c *cli.Context) error {
 			searchTitle := c.Args().Get(0)
