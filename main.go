@@ -73,9 +73,6 @@ func getMovie(searchTitle, lang string) {
 		log.Fatal(err)
 	}
 
-	// Debugging
-	log.Println(string(body))
-
 	movie := Movie{}
 	err = json.Unmarshal(body, &movie)
 	if err != nil {
