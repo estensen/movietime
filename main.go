@@ -35,12 +35,21 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
+	var lang string
 	app := &cli.App{
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name: "lang",
+				Value: "en",
+				Usage: "Language to translate plot text to",
+				Destination: &lang,
+			},
+		},
 		Name: "reviews",
 		Usage: "get aggregated reviews of a movie",
 		Action: func(c *cli.Context) error {
 			searchTitle := c.Args().Get(0)
-			getMovie(searchTitle)
+			getMovie(searchTitle, lang)
 			return nil
 		},
 	}
@@ -51,8 +60,7 @@ func main() {
 	}
 }
 
-func getMovie(searchTitle string) {
-
+func getMovie(searchTitle, lang string) {
 	url := fmt.Sprintf("http://www.omdbapi.com/?t=%s&plot=full&apikey=%s&", searchTitle, keys.Omdb)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -74,7 +82,7 @@ func getMovie(searchTitle string) {
 		log.Fatal(err)
 	}
 
-	translatedPlot, err := translateText("no", movie.Plot)
+	translatedPlot, err := translateText(lang, movie.Plot)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -97,10 +105,10 @@ func translateText(targetLanguage, text string) (string, error) {
 
 	resp, err := client.Translate(ctx, []string{text}, lang, nil)
 	if err != nil {
-		return "", fmt.Errorf("Translate: %v", err)
+		return "", fmt.Errorf("translate: %v", err)
 	}
 	if len(resp) == 0 {
-		return "", fmt.Errorf("Translate returned empty response to text: %s", text)
+		return "", fmt.Errorf("translate returned empty response to text: %s", text)
 	}
 	return resp[0].Text, nil
 }
